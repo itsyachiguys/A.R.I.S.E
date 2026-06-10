@@ -1,0 +1,2764 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A.R.I.S.E | Smart Warehouse Dashboard v2.1</title>
+
+    <!-- LIBRARIES -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #4ade80;
+            /* Bright Green */
+            --primary-dark: #22c55e;
+            --success: #22c55e;
+            --warning: #facc15;
+            --danger: #f87171;
+            --critical: #ef4444;
+            --bg-body: #050a08;
+            --bg-card: #0d1b14;
+            --bg-panel: #14281d;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #1d3326;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            --sidebar-width: 260px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        [data-theme="light"] {
+            --primary: #16a34a;
+            --primary-dark: #15803d;
+            --success: #16a34a;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --critical: #b91c1c;
+            --bg-body: #f0fdf4;
+            --bg-card: #ffffff;
+            --bg-panel: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --border: #e2e8f0;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem 1rem;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 2.5rem;
+            padding-left: 0.5rem;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .nav-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin: 1.5rem 0 0.5rem 0.5rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.8rem 1rem;
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 0.3rem;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: rgba(74, 222, 128, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-item i {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* MAIN CONTENT AREA */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* HEADER */
+        header {
+            padding: 1.2rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-body);
+            position: relative;
+            z-index: 50;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            flex: 1;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .breadcrumb span.active {
+            color: var(--primary);
+        }
+
+        /* Search Bar Fix */
+        .search-container {
+            position: relative;
+            width: 400px;
+            display: flex;
+            align-items: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            transition: border-color 0.2s;
+            overflow: hidden;
+            padding: 0 1rem;
+            height: 42px;
+        }
+
+        .search-container:focus-within {
+            border-color: var(--primary);
+        }
+
+        .search-icon {
+            color: var(--text-muted);
+            width: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-container input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: var(--text-main);
+            outline: none;
+            padding: 0 0.8rem;
+            font-size: 0.85rem;
+            height: 100%;
+        }
+
+        .search-filter-icon {
+            color: var(--text-muted);
+            width: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .search-filter-icon:hover {
+            color: var(--primary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .icon-btn {
+            cursor: pointer;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            position: relative;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            height: 24px;
+            width: 24px;
+        }
+
+        .icon-btn:hover {
+            color: var(--text-main);
+        }
+
+        .badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: var(--critical);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .profile-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-panel);
+            color: var(--primary);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* MAIN SCROLLABLE AREA */
+        main {
+            padding: 2rem;
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* PAGE TRANSITIONS */
+        .page-view {
+            animation: fadeIn 0.3s ease forwards;
+            display: none;
+        }
+
+        .page-view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* STANDARDIZED UI ELEMENTS */
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: 1px solid transparent;
+            font-size: 0.85rem;
+        }
+
+        .btn-primary {
+            background: rgba(74, 222, 128, 0.15);
+            color: var(--primary);
+            border-color: rgba(74, 222, 128, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: rgba(74, 222, 128, 0.25);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: var(--danger);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border-color: var(--border);
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-panel);
+        }
+
+        .mini-btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+            border-radius: 6px;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.7rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-panel);
+            color: var(--text-main);
+            font-size: 0.85rem;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+        }
+
+        .card {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.8rem;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* KPIs */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            padding: 1.2rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary-dark);
+        }
+
+        .kpi-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .kpi-icon {
+            position: absolute;
+            top: 1.2rem;
+            right: 1.2rem;
+            opacity: 0.2;
+            width: 28px;
+            height: 28px;
+        }
+
+        /* LAYOUT GRIDS */
+        .grid-2-col {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .grid-3-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .page-layout {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        /* WAREHOUSE GRID */
+        .warehouse-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .shelf-block {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 1.2rem;
+        }
+
+        .shelf-title {
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        .box-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 1rem;
+        }
+
+        .shelf-box {
+            aspect-ratio: 1.2;
+            padding: 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .shelf-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0) 100%);
+            pointer-events: none;
+        }
+
+        .shelf-box:hover {
+            transform: scale(1.05);
+            filter: brightness(1.1);
+        }
+
+        .box-id {
+            font-weight: 800;
+            font-size: 1rem;
+            z-index: 1;
+        }
+
+        .box-pct {
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 6px;
+            border-radius: 4px;
+            align-self: flex-start;
+            z-index: 1;
+            backdrop-filter: blur(2px);
+        }
+
+        .bg-full, .bg-success { background: #166534; box-shadow: inset 0 0 10px rgba(74, 222, 128, 0.2); }
+        .bg-low, .bg-warning { background: #b45309; box-shadow: inset 0 0 10px rgba(245, 158, 11, 0.2); }
+        .bg-critical, .bg-danger { background: #991b1b; box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.2); }
+        .bg-empty { background: #450a0a; border: 1px dashed #ef4444; animation: flash 2s infinite; }
+
+        .kpi-card.success { background: rgba(74, 222, 128, 0.05); border-color: rgba(74, 222, 128, 0.2); }
+        .kpi-card.warning { background: rgba(245, 158, 11, 0.05); border-color: rgba(245, 158, 11, 0.2); }
+        .kpi-card.danger { background: rgba(239, 68, 68, 0.05); border-color: rgba(239, 68, 68, 0.2); }
+        .kpi-card.primary { background: rgba(56, 189, 248, 0.05); border-color: rgba(56, 189, 248, 0.2); }
+
+        @keyframes flash {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* SIMULATION OVERLAYS */
+        .scanline-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.3;
+        }
+
+        .matrix-text {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .glow-border {
+            box-shadow: 0 0 15px rgba(74, 222, 128, 0.2);
+            border-color: rgba(74, 222, 128, 0.4) !important;
+        }
+
+        .glow-text-primary {
+            text-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+        }
+
+        /* GRID ENHANCEMENTS */
+        .box, .shelf-box {
+            position: relative;
+        }
+        
+        .box::after, .shelf-box::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(transparent, rgba(255,255,255,0.05), transparent);
+            background-size: 100% 10px;
+            animation: scanLine 8s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scanLine {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        .aisle-connector {
+            height: 20px;
+            background: repeating-linear-gradient(90deg, var(--border), var(--border) 10px, transparent 10px, transparent 20px);
+            margin: 0.5rem 0;
+            opacity: 0.3;
+        }
+
+        /* DATA TABLES */
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .data-table th {
+            padding: 1rem;
+            border-bottom: 2px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            background: var(--bg-panel);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+            vertical-align: middle;
+        }
+
+        .data-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* STATUS PILLS */
+        .status-pill {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-success {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .status-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* ROBOTICS PANEL */
+        .robot-panel {
+            position: relative;
+        }
+
+        .robot-glow {
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 200px;
+            height: 200px;
+            background: rgba(74, 222, 128, 0.1);
+            filter: blur(60px);
+            pointer-events: none;
+        }
+
+        .robot-console-line {
+            margin: 2px 0;
+            border-left: 2px solid var(--primary);
+            padding-left: 8px;
+            animation: slideInX 0.2s;
+            font-family: monospace;
+        }
+
+        .robot-console-alert {
+            color: var(--danger);
+            border-left-color: var(--danger);
+        }
+
+        @keyframes slideInX {
+            from {
+                transform: translateX(-10px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* DROPDOWNS & MODALS */
+        .dropdown {
+            position: absolute;
+            top: 120%;
+            right: 0;
+            width: 320px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow);
+            padding: 1rem;
+            display: none;
+            z-index: 1001;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .dropdown.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Notifications Panel inner */
+        .notif-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.8rem;
+            margin-bottom: 0.8rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .notif-list {
+            max-height: 250px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .notif-item {
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .notif-item:hover {
+            border-color: var(--primary);
+        }
+
+        .notif-item.read {
+            opacity: 0.6;
+        }
+
+        .search-results-dropdown {
+            left: 0;
+            right: auto;
+            width: 100%;
+            top: calc(100% + 5px);
+        }
+
+        .search-result-item {
+            padding: 0.7rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.85rem;
+        }
+
+        .search-result-item:hover {
+            background: var(--bg-panel);
+            color: var(--primary);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-panel);
+            width: 90%;
+            max-width: 600px;
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            position: relative;
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            animation: zoomIn 0.2s;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+        }
+
+        .modal-close:hover {
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* TOAST */
+        #toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .toast {
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-md);
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--primary);
+            animation: slideInUp 0.3s forwards;
+            max-width: 350px;
+        }
+
+        @keyframes slideInUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: var(--text-muted);
+            gap: 1rem;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-item {
+            padding: 0.8rem 1rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .tab-item:hover {
+            color: var(--text-main);
+        }
+
+        .tab-item.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* ─── ESP32 CONNECTION PANEL ─────────────────────── */
+        .conn-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .conn-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .conn-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .conn-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            display: inline-block;
+            margin-right: 6px;
+            transition: background 0.4s;
+        }
+        .conn-status-dot.online  { background: var(--success); box-shadow: 0 0 8px var(--success); animation: pulse-dot 2s infinite; }
+        .conn-status-dot.offline { background: var(--danger);  box-shadow: 0 0 8px var(--danger); }
+        .conn-status-dot.testing { background: var(--warning); animation: pulse-dot 0.6s infinite; }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+        }
+        .conn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 0.8rem;
+            align-items: end;
+        }
+        @media (max-width: 900px) {
+            .conn-grid { grid-template-columns: 1fr 1fr; }
+        }
+        .conn-type-btns {
+            display: flex;
+            gap: 0.4rem;
+            margin-bottom: 1.2rem;
+        }
+        .conn-type-btn {
+            padding: 0.35rem 0.9rem;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+        .conn-type-btn.active {
+            background: rgba(74,222,128,0.15);
+            color: var(--primary);
+            border-color: rgba(74,222,128,0.4);
+        }
+        .sensor-readout-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .sensor-big-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 1.2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .sensor-big-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(74,222,128,0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .sensor-value-big {
+            font-size: 2.8rem;
+            font-weight: 800;
+            line-height: 1;
+            font-family: monospace;
+            transition: color 0.4s;
+        }
+        .sensor-unit {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+        .sensor-label-small {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 0.6rem;
+        }
+        .sensor-sub {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            font-family: monospace;
+        }
+        .conn-footer {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+        }
+        .conn-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .conn-stat span { color: var(--text-main); font-weight: 600; }
+        .blink { animation: blink-anim 1.2s infinite; }
+        @keyframes blink-anim { 0%,100%{opacity:1} 50%{opacity:0.2} }
+    </style>
+</head>
+
+<body>
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="sidebar">
+        <div class="logo-container">
+            <div class="logo">A.R.I.S.E<span>.</span></div>
+        </div>
+
+        <p class="nav-label">General Mode</p>
+        <a class="nav-item active" data-path="dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+        <a class="nav-item" data-path="inventory"><i data-lucide="box"></i> Inventory Engine</a>
+        <a class="nav-item" data-path="analytics"><i data-lucide="line-chart"></i> Analytics Hub</a>
+        <a class="nav-item" data-path="robotics"><i data-lucide="cpu"></i> Robotics Control</a>
+
+        <p class="nav-label">Management</p>
+        <a class="nav-item" data-path="procurement"><i data-lucide="file-text"></i> Procurement</a>
+
+        <div style="margin-top: auto;">
+            <a class="nav-item" data-path="settings"><i data-lucide="settings"></i> Settings</a>
+            <a class="nav-item" data-path="profile"><i data-lucide="user"></i> My Profile</a>
+        </div>
+    </aside>
+
+    <div class="main-wrapper">
+        <!-- HEADER -->
+        <header>
+            <div class="header-content">
+                <div class="breadcrumb">
+                    <span id="bc-main">A.R.I.S.E</span> / <span id="bc-current" class="active">Dashboard</span>
+                </div>
+
+                <div class="search-container">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="global-search" placeholder="Search products, regions, skus...">
+                    <i data-lucide="sliders-horizontal" class="search-filter-icon" title="Advanced Search"></i>
+                    <div class="dropdown search-results-dropdown" id="search-dropdown"></div>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <div style="position: relative;">
+                    <button class="icon-btn" id="notif-trigger">
+                        <i data-lucide="bell"></i>
+                        <span class="badge" id="notif-badge" style="display:none;">0</span>
+                    </button>
+                    <div class="dropdown" id="notif-panel">
+                        <div class="notif-header">
+                            <span>Notifications</span>
+                            <div style="display:flex; gap: 0.5rem;">
+                                <button class="btn btn-outline mini-btn" id="btn-mark-read">Mark Read</button>
+                                <button class="btn btn-danger mini-btn" id="btn-clear-notif"><i data-lucide="trash-2"
+                                        style="width:12px;height:12px;"></i> Clear</button>
+                            </div>
+                        </div>
+                        <div class="notif-list" id="notif-list">
+                            <!-- Injected -->
+                        </div>
+                    </div>
+                </div>
+
+                <button class="icon-btn" id="theme-toggle" title="Toggle Theme">
+                    <i data-lucide="sun" id="theme-icon"></i>
+                </button>
+
+                <div class="profile-btn" data-path="profile">AD</div>
+            </div>
+        </header>
+
+        <!-- SPA MAINFRAME -->
+        <main id="app-content">
+            <!-- Dynamic Content Injected Here -->
+        </main>
+    </div>
+
+    <!-- GLOBAL MODALS -->
+    <!-- Product Detail Modal Side Drawer replacement (but functioning as centered modal for now) -->
+
+
+    <!-- Procurement PO Preview Modal -->
+    <div class="modal-overlay" id="po-modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-close" onclick="document.getElementById('po-modal').classList.remove('active')"><i
+                    data-lucide="x"></i></div>
+            <h2
+                style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom:1rem; font-size:1.2rem;">
+                Review Procurement Order</h2>
+            <div id="po-preview-content"
+                style="background: var(--bg-body); padding: 1.5rem; border-radius: 8px; font-family: monospace; font-size: 0.8rem; line-height: 1.5; white-space: pre-wrap; margin-bottom: 1.5rem; max-height: 50vh; overflow-y: auto; border: 1px solid var(--border);">
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button class="btn btn-outline"
+                    onclick="document.getElementById('po-modal').classList.remove('active')">Cancel</button>
+                <button class="btn btn-primary" id="po-download-btn"><i data-lucide="download"></i> Download
+                    PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="confirm-modal">
+        <div class="modal-content" style="max-width: 400px; text-align:center; padding: 2.5rem;">
+            <i data-lucide="alert-triangle"
+                style="width: 48px; height: 48px; color: var(--warning); margin: 0 auto 1.5rem auto;"></i>
+            <h3 style="margin-bottom: 0.5rem;" id="confirm-title">Are you sure?</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 2rem;" id="confirm-text">This action
+                cannot be undone.</p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button class="btn btn-outline"
+                    onclick="document.getElementById('confirm-modal').classList.remove('active')">Cancel</button>
+                <button class="btn btn-danger" id="confirm-action-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOASTS -->
+    <div id="toast-container"></div>
+
+    <!-- APP LOGIC -->
+    <script>
+        // --- STATE MANAGEMENT ---
+        const appState = {
+            currentPage: "dashboard",
+            inventory: [],
+            logs: [],
+            alerts: [],
+            settings: { threshold: 20, role: 'Admin', leadTime: 3, growthFactor: 1.15, alertsEnabled: true },
+            filters: { search: '', category: 'all', shelf: 'all', analyticsPeriod: '7d', analyticsProduct: 'all', stockLevel: 'all', view: 'grid', analyticsTab: 'trend', demandView: 'day', dashTrendPeriod: '7d', productTrendPeriod: '30d' },
+            currentProduct: null,
+            robot: {
+                active: false,
+                interval: null,
+                currentTarget: null,
+                scanIndex: 0,
+                totalScans: 0,
+                lastData: null
+            }
+        };
+
+        const shelves = ['A', 'B', 'C'];
+        const categories = ['Electronics', 'Grocery', 'Furniture', 'Industrial', 'Chemicals', 'Apparel', 'Automotive', 'Healthcare'];
+        const suppliers = ['Global Logistics', 'Nexus Parts', 'EcoSupply Co', 'Titan Industries', 'AeroCorp', 'MediLink', 'Zenith Systems', 'A.R.I.S.E Direct'];
+        let charts = {};
+
+        // --- CORE UTILITIES ---
+        function generateID() { return Math.random().toString(36).substr(2, 9); }
+        function spawnToast(type, text) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            const colors = { critical: 'var(--danger)', warning: 'var(--warning)', info: 'var(--primary)', success: 'var(--success)' };
+            toast.style.borderLeftColor = colors[type] || colors.info;
+            toast.innerHTML = `<p style="font-weight:700; font-size:0.75rem; color:${colors[type]}">${type.toUpperCase()}</p><p style="font-size:0.85rem;">${text}</p>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+        function logActivity(msg) {
+            appState.logs.unshift({ msg, time: new Date().toLocaleTimeString() });
+            if (appState.logs.length > 50) appState.logs.pop();
+            console.log(`[ERP_LOG]: ${msg}`);
+        }
+        function hasAccess(level) {
+            const roles = { 'Admin': 3, 'Manager': 2, 'Staff': 1 };
+            return roles[appState.settings.role] >= roles[level];
+        }
+
+        // --- MOCK DATA ENGINE ---
+        function initData() {
+            let idCounter = 1620;
+            appState.inventory = []; // flush
+            shelves.forEach(aisle => {
+                for (let shelf = 1; shelf <= 3; shelf++) {
+                    for (let bin = 1; bin <= 7; bin++) {
+                        const id = `${aisle}${shelf}-${bin}`;
+                        const cap = 150 + Math.floor(Math.random() * 150);
+                        // Ensure some sectors are empty (0) and some are very low (5) for better testing
+                        const qtyPct = [0, 5, 20, 45, 80, 95][Math.floor(Math.random() * 6)];
+                        const qty = Math.floor((qtyPct / 100) * cap);
+                        let history = Array.from({ length: 7 }, () => Math.floor(Math.random() * 40));
+
+                        appState.inventory.push({
+                            id, sku: `SKU-${10000 + idCounter--}`, name: `${categories[Math.floor(Math.random() * categories.length)]} Unit`,
+                            qty, cap, category: categories[Math.floor(Math.random() * categories.length)], history,
+                            lastUpdated: new Date(Date.now() - Math.random() * 86400000).toLocaleString(),
+                            supplier: suppliers[Math.floor(Math.random() * suppliers.length)], price: Math.floor(Math.random() * 100) + 10, rfid: 'RFID-' + Math.random().toString(36).substr(2, 6).toUpperCase(),
+                            scanned: false, aisle: aisle, shelf: shelf, bin: bin
+                        });
+                    }
+                }
+            });
+
+            // Initial Alerts
+            processAlerts();
+            logActivity("System Core Booted & Inventory Loaded");
+        }
+
+        function runPrediction(item) {
+            const avg = item.history.reduce((a, b) => a + b, 0) / 7;
+            const seasonal = avg * appState.settings.growthFactor;
+            const stockOut = seasonal > 0 ? Math.floor(item.qty / seasonal) : 999;
+            return { demand: seasonal.toFixed(1), stockOut, restockQty: Math.max(50, Math.ceil((seasonal * appState.settings.leadTime * 2) - item.qty)) };
+        }
+
+        // --- NOTIFICATIONS & ALERTS ---
+        function processAlerts() {
+            if (!appState.settings.alertsEnabled) return;
+
+            // Check Low Stock
+            appState.inventory.forEach(item => {
+                const pct = (item.qty / item.cap) * 100;
+                if (pct < appState.settings.threshold) {
+                    const existing = appState.alerts.find(a => a.itemId === item.id && !a.resolved);
+                    if (!existing) {
+                        appState.alerts.unshift({ id: generateID(), itemId: item.id, type: pct === 0 ? 'critical' : 'warning', text: `${pct === 0 ? 'EMPTY' : 'LOW STOCK'}: Sector ${item.id}`, time: new Date().toLocaleTimeString(), resolved: false, read: false });
+                    }
+                }
+            });
+            updateNotifUI();
+        }
+
+        function updateNotifUI() {
+            const list = document.getElementById('notif-list');
+            const badge = document.getElementById('notif-badge');
+            const activeAlerts = appState.alerts.filter(a => !a.resolved);
+            const unreadCount = activeAlerts.filter(a => !a.read).length;
+
+            if (unreadCount > 0) {
+                badge.style.display = 'flex';
+                badge.innerText = unreadCount;
+            } else {
+                badge.style.display = 'none';
+            }
+
+            if (activeAlerts.length === 0) {
+                list.innerHTML = '<div class="empty-state" style="padding: 1.5rem;"><i data-lucide="check-circle" style="width:30px;height:30px"></i> All clear.</div>';
+            } else {
+                list.innerHTML = activeAlerts.map(a => `
+                    <div class="notif-item ${a.read ? 'read' : ''}" data-id="${a.id}">
+                        <div style="flex:1">
+                            <p style="font-weight:600; color: var(--${a.type === 'critical' ? 'danger' : 'warning'});">${a.text}</p>
+                            <p style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">${a.time}</p>
+                        </div>
+                        <button class="btn btn-outline mini-btn" onclick="resolveAlert('${a.id}')" style="padding:4px;"><i data-lucide="check" style="width:14px;height:14px"></i></button>
+                    </div>
+                `).join('');
+            }
+            lucide.createIcons();
+        }
+
+        function resolveAlert(id) {
+            const a = appState.alerts.find(a => a.id === id);
+            if (a) { a.resolved = true; a.read = true; updateNotifUI(); }
+        }
+
+        document.getElementById('btn-mark-read').addEventListener('click', () => {
+            appState.alerts.forEach(a => a.read = true);
+            updateNotifUI();
+        });
+
+        document.getElementById('btn-clear-notif').addEventListener('click', () => {
+            document.getElementById('confirm-title').innerText = "Clear All Alerts?";
+            document.getElementById('confirm-text').innerText = "This will permanently archive all current system notifications.";
+            document.getElementById('confirm-modal').classList.add('active');
+
+            document.getElementById('confirm-action-btn').onclick = () => {
+                appState.alerts = appState.alerts.filter(a => a.resolved); // Keep resolved history, clear active
+                appState.alerts.forEach(a => { a.resolved = true; a.read = true; }); // Mark everything resolved
+                updateNotifUI();
+                spawnToast('success', 'Alerts cleared.');
+                document.getElementById('confirm-modal').classList.remove('active');
+            };
+        });
+
+        // --- SPA ROUTING ---
+        const pages = {
+            dashboard: renderDashboard,
+            inventory: renderInventory,
+            analytics: renderAnalytics,
+            robotics: renderRobotics,
+            procurement: renderProcurement,
+            profile: renderProfile,
+            settings: renderSettings,
+            product: renderProduct
+        };
+
+        function navigate(path, params = {}) {
+            if (!pages[path]) path = "dashboard";
+            appState.currentPage = path;
+
+            if (params.stockLevel) appState.filters.stockLevel = params.stockLevel;
+            else if (path === 'inventory' && !params.keepFilters) appState.filters.stockLevel = 'all';
+
+            if (params.view) appState.filters.view = params.view;
+            if (params.analyticsTab) appState.filters.analyticsTab = params.analyticsTab;
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            const activeNav = document.querySelector(`.nav-item[data-path="${path}"]`);
+            if (activeNav) activeNav.classList.add('active');
+
+            document.getElementById('bc-current').innerText = path.charAt(0).toUpperCase() + path.slice(1);
+
+            // Re-render Main Content Container
+            const main = document.getElementById('app-content');
+            main.innerHTML = `<div class="empty-state"><i data-lucide="loader-2" class="blink"></i> Loading module...</div>`;
+            lucide.createIcons();
+
+            setTimeout(() => {
+                const markup = pages[path]();
+                main.innerHTML = `<div class="page-view active">${markup}</div>`;
+                if (['dashboard', 'analytics', 'product'].includes(path)) initCharts(path);
+                lucide.createIcons();
+            }, 100);
+
+            // Sync URL hash without jumping
+            history.pushState(null, null, `#${path}`);
+            logActivity(`Navigated to ${path}`);
+        }
+
+        // Add Listeners
+        document.querySelectorAll('[data-path]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                navigate(link.getAttribute('data-path'));
+            });
+        });
+
+        window.addEventListener('popstate', () => {
+            let hash = window.location.hash.replace('#', '');
+            navigate(hash || 'dashboard');
+        });
+
+        // --- PAGE RENDER FUNCTIONS ---
+
+        function renderDashboard() {
+            const totQty = appState.inventory.reduce((a, b) => a + b.qty, 0);
+            const lowCount = appState.inventory.filter(i => (i.qty / i.cap) * 100 < appState.settings.threshold && i.qty > 0).length;
+            const empty = appState.inventory.filter(i => i.qty === 0).length;
+            const avgDemand = (appState.inventory.reduce((a, b) => a + parseFloat(runPrediction(b).demand), 0) / appState.inventory.length);
+            const alertsCount = appState.alerts.filter(a => !a.resolved).length;
+
+            let dLabel = 'Day', dMult = 1;
+            if (appState.filters.demandView === 'week') { dLabel = 'Week'; dMult = 7; }
+            if (appState.filters.demandView === 'month') { dLabel = 'Month'; dMult = 30; }
+            const demandValue = (avgDemand * dMult).toFixed(1);
+
+            return `
+                <!-- SIMULATION STATUS BAR -->
+                <div class="card glow-border" style="margin-bottom:1.5rem; padding:0.8rem 1.5rem; display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3);">
+                    <div style="display:flex; gap:1.5rem; align-items:center;">
+                        <span class="matrix-text" style="color:var(--primary); font-size:0.75rem;"><span class="blink">●</span> LIVE SYSTEM SIMULATION</span>
+                        <span style="font-size:0.7rem; color:var(--text-muted); border-left:1px solid var(--border); padding-left:1.5rem;">LOG_STAMP: ${new Date().toISOString()}</span>
+                    </div>
+                    <div style="display:flex; gap:1rem; align-items:center;">
+                        <div style="text-align:right;">
+                            <p class="matrix-text" style="font-size:0.6rem; color:var(--text-muted); margin:0;">SYNC_NODE</p>
+                            <p class="matrix-text" style="font-size:0.7rem; color:var(--primary); margin:0;">STABLE</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-row">
+                    <div class="kpi-card success glow-border" onclick="navigate('inventory', {view: 'table', keepFilters:false})" style="background: linear-gradient(135deg, rgba(74, 222, 128, 0.1), transparent);">
+                        <i data-lucide="boxes" class="kpi-icon" style="color: var(--primary)"></i>
+                        <p class="kpi-label matrix-text">In_Stock_Total</p>
+                        <div class="kpi-value glow-text-primary">${totQty.toLocaleString()}</div>
+                        <div style="font-size:0.65rem; color:var(--text-muted); margin-top:0.4rem;">AVG_UTIL: ${Math.round((totQty / appState.inventory.reduce((a,b)=>a+b.cap,0))*100)}%</div>
+                    </div>
+                    <div class="kpi-card warning" onclick="navigate('inventory', {stockLevel: 'low', keepFilters:true})" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), transparent);">
+                        <i data-lucide="alert-circle" class="kpi-icon" style="color: var(--warning)"></i>
+                        <p class="kpi-label matrix-text">Low_Threshold</p>
+                        <div class="kpi-value" style="color: var(--warning)">${lowCount}</div>
+                        <div style="font-size:0.65rem; color:var(--text-muted); margin-top:0.4rem;">ACTION_REQUIRED</div>
+                    </div>
+                    <div class="kpi-card danger" onclick="spawnToast('info', 'Filtering Null Sectors...'); navigate('inventory', {stockLevel: 'empty', keepFilters:true})" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), transparent); cursor:pointer;">
+                        <i data-lucide="layers" class="kpi-icon" style="color: var(--danger)"></i>
+                        <p class="kpi-label matrix-text">Null_Sectors</p>
+                        <div class="kpi-value" style="color: var(--danger)">${empty}</div>
+                        <div style="font-size:0.65rem; color:var(--text-muted); margin-top:0.4rem;">
+                            ${empty > 0 ? 'CO_ORDS: ' + appState.inventory.filter(i => i.qty === 0).slice(0, 2).map(i => i.id).join(', ') + (empty > 2 ? '...' : '') : 'ALL_SYSTEMS_NOMINAL'}
+                        </div>
+                    </div>
+                    <div class="kpi-card danger glow-border" onclick="spawnToast('info', 'Opening Alerts...'); document.getElementById('notif-panel').classList.add('show');" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), transparent); cursor:pointer; position:relative; z-index:100;">
+                        <i data-lucide="activity" class="kpi-icon" style="color: var(--critical)"></i>
+                        <p class="kpi-label matrix-text">System_Alerts</p>
+                        <div class="kpi-value" style="color: var(--critical)">${alertsCount}</div>
+                        <div style="font-size:0.65rem; color:var(--text-muted); margin-top:0.4rem;">LAUNCH_OVERLAY_AUDIT</div>
+                    </div>
+                    <div class="kpi-card primary glow-border" onclick="spawnToast('info', 'Loading Analytics...'); navigate('analytics')" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), transparent); cursor:pointer;">
+                        <i data-lucide="trending-up" class="kpi-icon" style="color: #38bdf8"></i>
+                        <p class="kpi-label matrix-text" style="color: #38bdf8;">Est_Demand/${dLabel}</p>
+                        <div class="kpi-value" style="color: #38bdf8;">${demandValue}</div>
+                        <div style="display:flex; gap:0.5rem; margin-top:0.4rem;">
+                            <span class="status-pill mini-btn ${appState.filters.demandView==='day'?'status-success':''}" onclick="event.stopPropagation(); appState.filters.demandView='day'; navigate('dashboard')">D</span>
+                            <span class="status-pill mini-btn ${appState.filters.demandView==='week'?'status-success':''}" onclick="event.stopPropagation(); appState.filters.demandView='week'; navigate('dashboard')">W</span>
+                            <span class="status-pill mini-btn ${appState.filters.demandView==='month'?'status-success':''}" onclick="event.stopPropagation(); appState.filters.demandView='month'; navigate('dashboard')">M</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- split -->
+                <div class="grid-2-col">
+                    <!-- Trend Chart -->
+                    <div class="card">
+                        <div class="card-header" style="justify-content: space-between;">
+                            <span class="card-title"><i data-lucide="line-chart"></i> Fleet Activity & Turnover Trend</span>
+                            <select class="form-control" style="width: auto; padding: 2px 6px; font-size: 0.75rem;" onchange="appState.filters.dashTrendPeriod=this.value; initCharts('dashboard')">
+                                <option value="7d" ${appState.filters.dashTrendPeriod === '7d' ? 'selected' : ''}>Last 7 Days</option>
+                                <option value="30d" ${appState.filters.dashTrendPeriod === '30d' ? 'selected' : ''}>Last 1 Month</option>
+                                <option value="1y" ${appState.filters.dashTrendPeriod === '1y' ? 'selected' : ''}>Last 1 Year</option>
+                            </select>
+                        </div>
+                        <div style="height: 250px; width: 100%;"><canvas id="dashTrendChart"></canvas></div>
+                    </div>
+                    
+                    <!-- Sector Utilization Bar -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title"><i data-lucide="bar-chart-3"></i> Sector Load Profile</span>
+                        </div>
+                        <div style="height: 250px; width: 100%;"><canvas id="dashUtilChart"></canvas></div>
+                    </div>
+
+                    <!-- Category Doughnut -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title"><i data-lucide="donut"></i> Category Allocation</span>
+                        </div>
+                        <div style="height: 250px; width: 100%;"><canvas id="dashCatChart"></canvas></div>
+                    </div>
+
+                    <!-- Supplier Bar -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title"><i data-lucide="truck"></i> Supplier Performance</span>
+                        </div>
+                        <div style="height: 250px; width: 100%;"><canvas id="dashSupChart"></canvas></div>
+                    </div>
+                </div>
+                
+                <div class="card" style="margin-top: 1.5rem;">
+                    <div class="card-header">
+                        <span class="card-title"><i data-lucide="layout-grid"></i> Overview Map (Random Sector Snapshot)</span>
+                        <button class="btn btn-outline mini-btn" onclick="navigate('inventory')">View Full Grid</button>
+                    </div>
+                    <div class="warehouse-container">
+                        ${renderGrid(appState.inventory.slice(0, 16), false)}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderInventory() {
+            let list = appState.inventory;
+            if (appState.filters.category !== 'all') list = list.filter(i => i.category === appState.filters.category);
+            if (appState.filters.shelf !== 'all') list = list.filter(i => i.id.startsWith(appState.filters.shelf));
+            if (appState.filters.stockLevel === 'low') list = list.filter(i => { const p = (i.qty / i.cap) * 100; return p > 0 && p < appState.settings.threshold; });
+            if (appState.filters.stockLevel === 'empty') list = list.filter(i => i.qty === 0);
+
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead><tr><th>Sector ID</th><th>SKU & Tag</th><th>Product Name</th><th>Category</th><th>Stock Level</th><th>Action</th></tr></thead>
+                        <tbody>
+                            ${list.map(i => {
+                const pct = Math.round((i.qty / i.cap) * 100);
+                let color = 'success';
+                if (pct === 0) color = 'danger'; else if (pct < appState.settings.threshold) color = 'warning';
+                return `
+                                <tr data-inv-id="${i.id}">
+                                    <td><strong>${i.id}</strong></td>
+                                    <td><div style="font-family:monospace; color:var(--text-muted)">${i.sku}<br>${i.rfid}</div></td>
+                                    <td>${i.name}</td>
+                                    <td>${i.category}</td>
+                                    <td>
+                                        <div style="display:flex; align-items:center; gap:0.5rem">
+                                            <div style="width: 60px; height: 6px; background: var(--bg-body); border-radius:3px; overflow:hidden;">
+                                                <div class="inv-bar" style="width:${pct}%; background:var(--${color}); height:100%;"></div>
+                                            </div>
+                                            <span><strong class="inv-qty-cell">${i.qty}</strong><span style="color:var(--text-muted)">/${i.cap}</span></span>
+                                        </div>
+                                    </td>
+                                    <td><button class="btn btn-outline mini-btn" onclick="openProductDetail('${i.id}')">Inspect</button></td>
+                                </tr>`;
+            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            return `
+                <div class="page-layout">
+                    <!-- Main Inventory View -->
+                    <div>
+                        <div class="tabs">
+                            <div class="tab-item ${appState.filters.view === 'grid' ? 'active' : ''}" onclick="appState.filters.view='grid'; navigate('inventory', {view: 'grid', keepFilters:true})">Grid View Mapping</div>
+                            <div class="tab-item ${appState.filters.view === 'table' ? 'active' : ''}" onclick="appState.filters.view='table'; navigate('inventory', {view: 'table', keepFilters:true})">Detailed Table View</div>
+                        </div>
+                        
+                        <div class="warehouse-wrapper" style="display:${appState.filters.view === 'grid' ? 'block' : 'none'};">
+                            ${list.length === 0 ? '<div class="empty-state">No matching sectors found.</div>' : renderGrid(list, true)}
+                        </div>
+                        <div class="table-wrapper" style="display:${appState.filters.view === 'table' ? 'block' : 'none'};">
+                            ${list.length === 0 ? '<div class="empty-state">No matching sectors found.</div>' : tableHtml}
+                        </div>
+                    </div>
+                    
+                    <!-- Advanced Filters Panel -->
+                    <div class="card">
+                        <h3 style="font-size:1rem; margin-bottom:1.5rem; border-bottom:1px solid var(--border); padding-bottom:0.8rem;">Filter Controls</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Stock Status</label>
+                            <select class="form-control" onchange="appState.filters.stockLevel=this.value; navigate('inventory', {keepFilters:true})">
+                                <option value="all" ${appState.filters.stockLevel === 'all' ? 'selected' : ''}>All Sectors</option>
+                                <option value="low" ${appState.filters.stockLevel === 'low' ? 'selected' : ''}>Low Stock</option>
+                                <option value="empty" ${appState.filters.stockLevel === 'empty' ? 'selected' : ''}>Empty Shelves</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Category</label>
+                            <select class="form-control" onchange="appState.filters.category=this.value; navigate('inventory', {keepFilters:true})">
+                                <option value="all" ${appState.filters.category === 'all' ? 'selected' : ''}>All Categories</option>
+                                <option value="Electronics" ${appState.filters.category === 'Electronics' ? 'selected' : ''}>Electronics</option>
+                                <option value="Grocery" ${appState.filters.category === 'Grocery' ? 'selected' : ''}>Grocery</option>
+                                <option value="Furniture" ${appState.filters.category === 'Furniture' ? 'selected' : ''}>Furniture</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Sector Region</label>
+                            <select class="form-control" onchange="appState.filters.shelf=this.value; navigate('inventory', {keepFilters:true})">
+                                <option value="all" ${appState.filters.shelf === 'all' ? 'selected' : ''}>All Regions</option>
+                                <option value="A" ${appState.filters.shelf === 'A' ? 'selected' : ''}>Sector A</option>
+                                <option value="B" ${appState.filters.shelf === 'B' ? 'selected' : ''}>Sector B</option>
+                                <option value="C" ${appState.filters.shelf === 'C' ? 'selected' : ''}>Sector C</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-outline" style="width:100%" onclick="appState.filters.category='all'; appState.filters.shelf='all'; appState.filters.stockLevel='all'; navigate('inventory')">Reset Controls</button>
+                        
+                        <div style="margin-top: 2rem; border-top:1px solid var(--border); padding-top:1rem;">
+                            <h4 style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem; text-transform:uppercase;">Bulk Actions</h4>
+                            <button class="btn btn-outline" style="width:100%; margin-bottom:0.5rem;" onclick="spawnToast('info', 'Data Exported to CSV')"><i data-lucide="download"></i> Export Displayed</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        function renderGrid(data, grouped = true) {
+            let html = '';
+            if (!grouped) {
+                html += `
+                <div class="card" style="padding:0; overflow:hidden;">
+                    <table class="data-table" style="margin:0;">
+                        <thead>
+                            <tr class="matrix-text" style="font-size:0.7rem; color:var(--text-muted); background:rgba(0,0,0,0.2);">
+                                <th>ASSET_ID</th>
+                                <th>STATUS</th>
+                                <th>FILL_RATIO</th>
+                                <th>CATEGORY_CLASS</th>
+                                <th>LINK_STATE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(i => {
+                                const pct = (i.qty / i.cap) * 100;
+                                let color = pct === 0 ? 'danger' : (pct < appState.settings.threshold ? 'warning' : 'success');
+                                return `
+                                <tr>
+                                    <td class="matrix-text" style="font-weight:700;">${i.id}</td>
+                                    <td><span class="status-pill status-${color}">${color.toUpperCase()}</span></td>
+                                    <td>
+                                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                                            <div style="flex:1; height:6px; background:var(--bg-body); border-radius:3px; overflow:hidden;">
+                                                <div style="width:${pct}%; height:100%; background:var(--${color});"></div>
+                                            </div>
+                                            <span style="font-size:0.65rem;">${Math.round(pct)}%</span>
+                                        </div>
+                                    </td>
+                                    <td style="font-size:0.75rem;">${i.category}</td>
+                                    <td><button class="btn btn-outline mini-btn" onclick="openProductDetail('${i.id}')">LINK</button></td>
+                                </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            } else {
+                ['A', 'B', 'C'].forEach((aisle, idx) => {
+                    const aisleData = data.filter(i => i.aisle === aisle);
+                    if (aisleData.length === 0) return;
+                    
+                    html += `
+                    <div class="shelf-row glow-border" style="background:rgba(0,0,0,0.1); padding:1.2rem; border-radius:12px; margin-bottom:2rem;">
+                        <div class="matrix-text" style="color:var(--primary); font-weight:700; margin-bottom:1.5rem; display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:0.5rem;">
+                            <span><i data-lucide="layout-grid"></i> AISLE_ARRAY: ${aisle}</span>
+                            <span style="font-size:0.6rem; color:var(--text-muted);">TABULATED_TOPOLOGY</span>
+                        </div>
+                        <table style="width:100%; border-collapse: separate; border-spacing: 6px;">
+                            <thead>
+                                <tr class="matrix-text" style="font-size:0.6rem; color:var(--text-muted);">
+                                    <th style="text-align:left; width:80px; padding-bottom:8px;">SHELF_LVL</th>
+                                    <th>BIN_01</th><th>BIN_02</th><th>BIN_03</th><th>BIN_04</th><th>BIN_05</th><th>BIN_06</th><th>BIN_07</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${[3, 2, 1].map(shelf => {
+                                    const shelfData = aisleData.filter(i => i.shelf === shelf);
+                                    return `
+                                    <tr>
+                                        <td class="matrix-text" style="font-size:0.65rem; background:rgba(0,0,0,0.2); text-align:center; padding:10px; border-radius:4px; border:1px solid var(--border);">LVL_${shelf}</td>
+                                        ${[1,2,3,4,5,6,7].map(bin => {
+                                            const item = shelfData.find(i => i.bin === bin);
+                                            if (!item) return '<td></td>';
+                                            const pct = Math.round((item.qty / item.cap) * 100);
+                                            let color = pct === 0 ? 'danger' : (pct < appState.settings.threshold ? 'warning' : 'success');
+                                            return `
+                                            <td>
+                                                <div class="box bg-${color}" onclick="openProductDetail('${item.id}')" 
+                                                     style="height:36px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); cursor:pointer; position:relative; box-shadow: 0 4px 8px rgba(0,0,0,0.4);"
+                                                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0 10px currentColor';"
+                                                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.4)';"
+                                                     title="NODE_${item.id}: ${pct}% FILL">
+                                                    <span style="position:absolute; bottom:2px; right:4px; font-size:8px; color:rgba(255,255,255,0.4); font-family:monospace; pointer-events:none;">${item.id}</span>
+                                                </div>
+                                            </td>`;
+                                        }).join('')}
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>`;
+                });
+            }
+            return html;
+        }
+
+        function generateBoxHtml(item) {
+            const pct = (item.qty / item.cap) * 100;
+            let color = 'bg-full';
+            if (pct === 0) color = 'bg-empty';
+            else if (pct < appState.settings.threshold) color = 'bg-critical';
+            else if (pct < 70) color = 'bg-low';
+
+            return `<div class="shelf-box ${color}" onclick="openProductDetail('${item.id}')">
+                <div class="box-id">${item.id}</div>
+                <div class="box-pct">${Math.round(pct)}% Full</div>
+            </div>`;
+        }
+
+        function renderAnalytics() {
+            const isCap = appState.filters.analyticsTab === 'capacity';
+            return `
+                <div class="tabs">
+                    <div class="tab-item ${!isCap ? 'active' : ''}" onclick="navigate('analytics', {analyticsTab: 'trend'})">Trend Forecasts</div>
+                    <div class="tab-item ${isCap ? 'active' : ''}" onclick="navigate('analytics', {analyticsTab: 'capacity'})">Capacity Reports</div>
+                </div>
+                <div class="card" style="margin-bottom:1.5rem;">
+                     <div class="card-header" style="border:none; padding:0; margin:0;">
+                        <h3 class="card-title">Parameter Controller</h3>
+                        <div style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap;">
+                             <select class="form-control" id="a-group" onchange="appState.filters.analyticsGroup=this.value; initCharts('analytics');" style="width:150px; padding:0.4rem;">
+                                <option value="all" ${appState.filters.analyticsGroup === 'all' ? 'selected' : ''}>All Groups</option>
+                                ${categories.map(c => `<option value="${c}" ${appState.filters.analyticsGroup === c ? 'selected' : ''}>${c}</option>`).join('')}
+                            </select>
+                             <select class="form-control" id="a-product" onchange="appState.filters.analyticsProduct=this.value; initCharts('analytics');" style="width:200px; padding:0.4rem;">
+                                <option value="all">All Products</option>
+                                ${appState.inventory.map(i => `<option value="${i.id}" ${appState.filters.analyticsProduct === i.id ? 'selected' : ''}>${i.id} - ${i.name}</option>`).join('')}
+                            </select>
+                            <select class="form-control" id="a-period" onchange="appState.filters.analyticsPeriod=this.value; initCharts('analytics');" style="width:150px; padding:0.4rem;">
+                                <option value="7d" ${appState.filters.analyticsPeriod === '7d' ? 'selected' : ''}>Last 7 Days</option>
+                                <option value="30d" ${appState.filters.analyticsPeriod === '30d' ? 'selected' : ''}>Last 1 Month</option>
+                                <option value="3m" ${appState.filters.analyticsPeriod === '3m' ? 'selected' : ''}>Last 3 Months</option>
+                                <option value="1y" ${appState.filters.analyticsPeriod === '1y' ? 'selected' : ''}>Last 1 Year</option>
+                            </select>
+                        </div>
+                     </div>
+                </div>
+
+                <div class="grid-2-col" style="${isCap ? 'display:none;' : ''}">
+                    <div class="card" style="grid-column: span 2;">
+                        <div class="card-header"><span class="card-title">Velocity & Historic Demand</span></div>
+                        <div style="height: 350px; width: 100%;"><canvas id="an-trendChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="grid-2-col" style="${!isCap ? 'display:none;' : ''}">
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">Facility Capacity Overview</span></div>
+                        <div style="height: 350px; width: 100%;"><canvas id="an-capChart"></canvas></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">Top Filled Sectors</span></div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead><tr><th>Sector</th><th>Stock</th><th>%</th></tr></thead>
+                                <tbody>
+                                    ${[...appState.inventory].sort((a, b) => (b.qty / b.cap) - (a.qty / a.cap)).slice(0, 5).map(i => {
+                const p = Math.round((i.qty / i.cap) * 100);
+                return `<tr><td>${i.id}</td><td>${i.qty}</td><td><span style="color:var(--${p > 90 ? 'danger' : (p < appState.settings.threshold ? 'warning' : 'success')})">${p}%</span></td></tr>`;
+            }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        function renderRobotics() {
+            const r = appState.robot;
+            return `
+                <!-- ── PAGE TITLE BAR ── -->
+                <div class="card" style="margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                    <div>
+                        <h2 style="margin-bottom:0.3rem;">Fleet Command Node</h2>
+                        <p style="color:var(--text-muted); font-size:0.85rem;">A.R.I.S.E — Autonomous Robot Inventory Scanning Simulation</p>
+                    </div>
+                    <div style="display:flex; gap:0.8rem; align-items:center;">
+                        <span id="rbt-status-badge" class="status-pill status-${r.active ? 'success' : 'warning'}">
+                            <span class="blink">●</span> ${r.active ? 'SCANNING ACTIVE' : 'SYSTEM STANDBY'}
+                        </span>
+                        <button class="btn btn-${r.active ? 'danger' : 'primary'}" id="rbt-toggle" onclick="toggleRobot()">
+                            <i data-lucide="power"></i> ${r.active ? 'Stop Simulation' : 'Start Simulation'}
+                        </button>
+                    </div>
+                </div>
+
+                <div class="page-layout">
+                    <!-- Stream & Map -->
+                    <div>
+                        <div class="card robot-panel" style="margin-bottom:1.5rem;">
+                            <div class="robot-glow"></div>
+                            <div class="card-header" style="position:relative; z-index:2;">
+                                <span class="card-title"><i data-lucide="terminal"></i> Live Simulation Log</span>
+                            </div>
+                            <div style="background:#000; border:1px solid var(--border); border-radius: 8px; padding: 1rem; height: 180px; display:flex; flex-direction:column; position:relative; z-index:2;">
+                                <div id="robot-console" style="flex:1; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end; font-size:0.8rem;">
+                                    <div class="robot-console-line" style="color: #94a3b8; border-color: #94a3b8;">[SYS] Simulation environment ready.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header"><span class="card-title"><i data-lucide="map"></i> Automated Warehouse Mapper</span></div>
+                            <div style="display:flex; flex-direction:column; gap: 1.5rem; padding: 1.5rem 1rem; background: var(--bg-panel); border-radius: 8px; border: 1px solid var(--border);">
+                                ${['A', 'B', 'C'].map(aisle => `
+                                    <div class="aisle-block" style="background: var(--bg-body); padding: 1rem; border-radius: 8px; border: 1px solid var(--border);">
+                                        <h4 style="margin-bottom:0.8rem; color:var(--text-main); font-size: 0.9rem;"><i data-lucide="align-justify" style="width:14px;display:inline;"></i> Warehouse Aisle ${aisle}</h4>
+                                        <div style="display:flex; flex-direction:column; gap: 0.8rem;">
+                                            ${[1, 2, 3].map(shelf => `
+                                                <div style="display:flex; gap: 0.5rem; align-items:center;">
+                                                    <span style="font-size:0.75rem; color:var(--text-muted); font-family:monospace; min-width:60px;">SHELF ${shelf}</span>
+                                                    <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap: 6px; flex-grow:1;">
+                                                        ${appState.inventory.filter(i => i.aisle === aisle && i.shelf === shelf).map(i => {
+                const isTarget = appState.robot.currentTarget === i.id;
+                let bg = 'var(--bg-panel)'; let op = 0.3;
+                if (i.scanned) {
+                    const pct = (i.qty / i.cap) * 100;
+                    bg = `var(--${pct < appState.settings.threshold ? (pct === 0 ? 'danger' : 'warning') : 'success'})`;
+                    op = 0.8;
+                }
+                if (isTarget) { bg = 'var(--primary)'; op = 1; }
+                return `<div id="rbt-map-${i.id}" style="height: 18px; border-radius: 3px; background: ${bg}; ${isTarget ? 'box-shadow: 0 0 8px var(--primary); transform: scale(1.2); animation: pulse 1s infinite; z-index:10; position:relative;' : 'transition: background 0.3s;'} border: 1px solid var(--border); opacity: ${op};" title="ID: ${i.id}"></div>`;
+            }).join('')}
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <style>@keyframes pulse { 0% { opacity: 1; transform: scale(1.3); } 50% { opacity: 0.6; transform: scale(1); } 100% { opacity: 1; transform: scale(1.3); } }</style>
+                        </div>
+                    </div>
+
+                    <!-- Sensor Arrays -->
+                    <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                        <!-- Ultrasonic Card -->
+                        <div class="card sensor-big-card">
+                            <p class="sensor-label-small"><i data-lucide="radar" style="width:12px;height:12px;display:inline;"></i> Simulated Ultrasonic Distance</p>
+                            <p class="sensor-value-big" id="sns-dist">---<span class="sensor-unit"> cm</span></p>
+                            <p class="sensor-sub" id="sns-loc">Target: None</p>
+                            <div style="margin-top:0.8rem; height:4px; background:var(--bg-body); border-radius:2px; overflow:hidden;">
+                                <div id="dist-bar" style="height:100%; width:0%; background:var(--primary); transition:width 0.4s, background 0.4s; border-radius:2px;"></div>
+                            </div>
+                        </div>
+                        <!-- Gas Card -->
+                        <div class="card sensor-big-card">
+                            <p class="sensor-label-small"><i data-lucide="flame" style="width:12px;height:12px;display:inline;"></i> Simulated Air Quality (ADC)</p>
+                            <p class="sensor-value-big" id="sns-mq">---</p>
+                            <p class="sensor-sub" id="sns-mq-v">0.00 V — SAFE</p>
+                            <div style="margin-top:0.8rem; height:4px; background:var(--bg-body); border-radius:2px; overflow:hidden;">
+                                <div id="gas-bar" style="height:100%; width:0%; background:var(--success); transition:width 0.4s, background 0.4s; border-radius:2px;"></div>
+                            </div>
+                        </div>
+                        <!-- Stock Fill Card -->
+                        <div class="card" style="padding:1rem;">
+                            <p class="sensor-label-small" style="margin-bottom:0.8rem;">📦 Mapped Stock (Derived)</p>
+                            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                                <span id="stock-derived" style="font-size:1.6rem; font-weight:800; font-family:monospace;">—</span>
+                                <span id="stock-cap" style="font-size:0.85rem; color:var(--text-muted);">/ — units</span>
+                            </div>
+                            <div style="height:6px; background:var(--bg-body); border-radius:3px; overflow:hidden; margin-top:0.6rem;">
+                                <div id="stock-bar" style="height:100%; width:0%; background:var(--success); transition:width 0.5s, background 0.5s;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        // ─── SIMULATION HELPERS ─────────────────────────────────────
+        function startSimulation() {
+            appState.robot.active = true;
+            appState.robot.scanIndex = 0;
+            appState.inventory.forEach(i => i.scanned = false);
+            logActivity('Simulated scan sequence started.');
+            appState.robot.interval = setInterval(runScanCycle, 3000);
+            spawnToast('success', 'Simulation active.');
+            navigate('robotics');
+        }
+
+        function stopSimulation() {
+            appState.robot.active = false;
+            clearInterval(appState.robot.interval);
+            logActivity('Simulation paused.');
+            spawnToast('info', 'Simulation paused.');
+            navigate('robotics');
+        }
+        function renderProcurement() {
+            const list = appState.inventory.map(i => ({ ...i, p: runPrediction(i) })).filter(i => i.qty < i.p.demand * appState.settings.leadTime);
+
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i data-lucide="file-text"></i> Restock Generation Queue</h3>
+                        <div style="display:flex; gap:1rem;">
+                            <button class="btn btn-outline" onclick="reviewCombinedPO()"><i data-lucide="eye"></i> Master Audit</button>
+                            <button class="btn btn-primary" onclick="downloadCombinedPO()"><i data-lucide="file-down"></i> Dispatch All POs</button>
+                        </div>
+                    </div>
+                    
+                    ${list.length === 0 ? '<div class="empty-state"><i data-lucide="check-circle" style="width:48px;height:48px;color:var(--success)"></i><p>Inventory levels optimal. No restock needed.</p></div>' : `
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead><tr><th>Target Asset</th><th>Current Stock</th><th>Lead Restock Qty</th><th>Supplier</th><th>Action</th></tr></thead>
+                            <tbody>
+                                ${list.map(i => `
+                                <tr>
+                                    <td><strong>${i.name}</strong><br><span style="font-size:0.7rem; color:var(--text-muted)">Sector ${i.id}</span></td>
+                                    <td><span style="color:var(--danger); font-weight:700;">${i.qty}</span></td>
+                                    <td><strong>+${i.p.restockQty}</strong></td>
+                                    <td>${i.supplier}</td>
+                                    <td>
+                                        <div style="display:flex; gap:0.5rem;">
+                                            <button class="btn btn-outline mini-btn" onclick="reviewPO('${i.id}')">View</button>
+                                            <button class="btn btn-primary mini-btn" onclick="downloadPO('${i.id}')"><i data-lucide="download" style="width:14px;height:14px"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>`}
+                </div>
+            `;
+        }
+
+        function renderProfile() {
+            return `
+                <div class="page-layout">
+                    <div class="card">
+                        <div class="card-header"><span class="card-title"><i data-lucide="shield"></i> Session Activity Log</span></div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead><tr><th>Timestamp</th><th>Action Record</th></tr></thead>
+                                <tbody>
+                                    ${appState.logs.length === 0 ? '<tr><td colspan="2" style="text-align:center; color:var(--text-muted);">No activity logged in current session.</td></tr>' :
+                    appState.logs.map(l => `<tr><td style="white-space:nowrap; color:var(--text-muted); font-size:0.75rem;">${l.time}</td><td>${l.msg}</td></tr>`).join('')
+                }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                        <div class="card" style="text-align: center; padding: 3rem 1.5rem;">
+                            <div class="profile-btn" style="width: 90px; height: 90px; font-size: 2.5rem; margin: 0 auto 1.5rem auto;">AD</div>
+                            <h2 style="font-size: 1.5rem; margin-bottom:0.2rem;">System Admin</h2>
+                            <span class="status-pill status-info" style="margin-bottom:1rem; border-color:var(--primary); color:var(--primary);">Clearance: ${appState.settings.role}</span>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 1rem;"><i data-lucide="mail" style="display:inline; width:14px; position:relative; top:2px;"></i> admin@core.arise.net</p>
+                            
+                            <button class="btn btn-outline" style="width:100%; margin-top:2rem;" onclick="spawnToast('warning', 'LDAP Sync Required for Password change')">Change Password</button>
+                            <button class="btn btn-danger" style="width:100%; margin-top:.5rem;" onclick="location.reload()">Terminate Session</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSettings() {
+            return `
+                <div class="page-layout">
+                    <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                        <div class="card">
+                            <div class="card-header"><span class="card-title"><i data-lucide="sliders"></i> ERP Engine Configuration</span></div>
+                            <div class="grid-2-col">
+                                <div class="form-group">
+                                    <label class="form-label">Global Low-Stock Threshold (%)</label>
+                                    <input type="number" class="form-control" value="${appState.settings.threshold}" onchange="appState.settings.threshold=parseInt(this.value); logActivity('Updated threshold to '+this.value+'%'); processAlerts(); spawnToast('success', 'Threshold Saved')">
+                                    <p style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Engine fires alerts when sectors dip below capacity percentage.</p>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Estimated Lead Time (Days)</label>
+                                    <input type="number" class="form-control" value="${appState.settings.leadTime}" onchange="appState.settings.leadTime=parseInt(this.value); logActivity('Lead time adjusted to '+this.value); spawnToast('success', 'Lead Time Saved')">
+                                </div>
+                            </div>
+                            <div class="form-group" style="max-width:50%;">
+                                <label class="form-label">Seasonal Growth Factor Baseline</label>
+                                <input type="number" step="0.01" class="form-control" value="${appState.settings.growthFactor}" onchange="appState.settings.growthFactor=parseFloat(this.value); spawnToast('success', 'AI Baseline Shifted')">
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header"><span class="card-title"><i data-lucide="bell"></i> Alert System Rules</span></div>
+                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+                                <div>
+                                    <p style="font-weight:600; font-size:0.9rem;">Master Diagnostic Alerts</p>
+                                    <p style="font-size:0.75rem; color:var(--text-muted);">Enable or disable background daemon alerts for stock and sensors.</p>
+                                </div>
+                                <button class="btn btn-${appState.settings.alertsEnabled ? 'primary' : 'outline'}" onclick="appState.settings.alertsEnabled=!appState.settings.alertsEnabled; navigate('settings'); spawnToast('info', 'Alert system toggled')">${appState.settings.alertsEnabled ? 'Enabled' : 'Disabled'}</button>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="card">
+                        <div class="card-header"><span class="card-title"><i data-lucide="shield-check"></i> Role Simulation</span></div>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem; line-height:1.5;">Temporarily downgrade your session access level to test visual gates.</p>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Current Role</label>
+                            <select class="form-control" onchange="appState.settings.role=this.value; spawnToast('warning', 'Role Shifted to ' + this.value); logActivity('Shifted role to '+this.value)">
+                                <option value="Admin" ${appState.settings.role === 'Admin' ? 'selected' : ''}>Admin (L3)</option>
+                                <option value="Manager" ${appState.settings.role === 'Manager' ? 'selected' : ''}>Manager (L2)</option>
+                                <option value="Staff" ${appState.settings.role === 'Staff' ? 'selected' : ''}>Staff (L1)</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-top: 2rem; background: var(--bg-panel); border:1px solid var(--border); padding: 1rem; border-radius: 8px;">
+                            <p style="font-size:0.75rem; font-weight: 700; color:var(--text-muted);">CORE DB STATUS</p>
+                            <p style="font-size: 0.85rem; margin-top:5px; font-family:monospace;">Node: ARISE-SYS-90X <br> Active Sectors: ${appState.inventory.length}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- PRODUCT DETAILS PAGE ---
+        function openProductDetail(id) {
+            appState.currentProduct = id;
+            navigate('product');
+        }
+
+        function renderProduct() {
+            if (!appState.currentProduct) return `<div class="empty-state">No Sector/Product selected. Validate global index.</div>`;
+            const item = appState.inventory.find(i => i.id === appState.currentProduct);
+            if (!item) return `<div class="empty-state">Product matrix disconnected.</div>`;
+            const p = runPrediction(item);
+            const pct = Math.round((item.qty / item.cap) * 100);
+
+            return `
+                <div class="page-layout" style="grid-template-columns: 1fr; margin-bottom: 2rem;">
+                    <button class="btn btn-outline mini-btn" onclick="window.history.back()" style="align-self: flex-start; margin-bottom:1.5rem;"><i data-lucide="arrow-left" style="width:14px; height: 14px;"></i> Return </button>
+                    
+                    <div class="card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap: 1rem;">
+                        <div style="display:flex; align-items:center; gap: 1.5rem;">
+                            <div style="width: 60px; height: 60px; background: rgba(74, 222, 128, 0.1); border-radius: 8px; border: 1px solid var(--primary); display:flex; align-items:center; justify-content:center; font-size: 1.8rem; font-family:monospace; color:var(--primary); font-weight:bold;">${item.id}</div>
+                            <div>
+                                <p style="color:var(--primary); font-family:monospace; font-weight:700; font-size: 0.8rem; margin-bottom:0.2rem;">${item.rfid} | ${item.sku}</p>
+                                <h2 style="font-size:1.8rem; margin-top:0; letter-spacing:-0.5px">${item.name}</h2>
+                                <p style="color:var(--text-muted); font-size:0.9rem;">${item.category} • Supplier Array: ${item.supplier}</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            ${hasAccess('Manager') ? `<button class="btn btn-outline" onclick="adjustQty('${item.id}', 25)"><i data-lucide="plus"></i> Manual Intake (+25)</button>` : '<span style="font-size:0.8rem; color:var(--text-muted);"><i data-lucide="lock" style="width:12px;display:inline;"></i> L2 Auth Required</span>'}
+                            <button class="btn btn-primary" onclick="reviewPO('${item.id}')"><i data-lucide="file-down"></i> Dispatch Priority PO</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid-2-col" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); margin-bottom: 2rem;">
+                    <div class="card">
+                        <p class="kpi-label">Sector Capacity Fill</p>
+                        <p style="font-size:2.2rem; font-weight:800">${item.qty} <span style="font-size:1rem; color:var(--text-muted); font-weight:normal;">/ ${item.cap} Max</span></p>
+                        <div style="width: 100%; height: 8px; background: var(--bg-body); border-radius:4px; overflow:hidden; margin-top: 0.8rem;">
+                            <div style="width:${pct}%; background:var(--${pct < appState.settings.threshold ? 'warning' : 'success'}); height:100%;"></div>
+                        </div>
+                        <p style="font-weight:600; font-size:0.8rem; color:var(--${pct < appState.settings.threshold ? 'warning' : 'success'}); margin-top:0.8rem;">${pct}% Physical Utilization</p>
+                    </div>
+                    <div class="card">
+                        <p class="kpi-label">Predicted Analytics Matrix</p>
+                        <p style="font-size:2.2rem; font-weight:800">${p.demand} <span style="font-size:1rem; font-weight:normal; color:var(--text-muted)">/ day burn rate</span></p>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin-top: 0.8rem;">Estimated Exhaustion in <span style="color:var(--${p.stockOut < 5 ? 'danger' : 'text-main'}); font-weight:700;">${p.stockOut} cycles</span></p>
+                    </div>
+                    <div class="card">
+                        <p class="kpi-label">Total Asset Value</p>
+                        <p style="font-size:2.2rem; font-weight:800; color: #cbd5e1;">₹${(item.qty * item.price).toLocaleString()} <span style="font-size:1rem; color:var(--text-muted); font-weight:normal;">Total</span></p>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin-top: 0.8rem;">Current Price Index: ₹${item.price} per unit</p>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header" style="justify-content: space-between;">
+                        <span class="card-title"><i data-lucide="bar-chart-2"></i> Unit Turnover Velocity History</span>
+                        <select class="form-control" style="width: auto; padding: 2px 6px; font-size: 0.75rem;" onchange="appState.filters.productTrendPeriod=this.value; initCharts('product')">
+                            <option value="7d" ${appState.filters.productTrendPeriod === '7d' ? 'selected' : ''}>Last 7 Days</option>
+                            <option value="30d" ${appState.filters.productTrendPeriod === '30d' ? 'selected' : ''}>Last 1 Month</option>
+                            <option value="1y" ${appState.filters.productTrendPeriod === '1y' ? 'selected' : ''}>Last 1 Year</option>
+                        </select>
+                    </div>
+                    <div style="height: 350px; width: 100%;"><canvas id="prodTrendChart"></canvas></div>
+                </div>
+            `;
+        }
+
+        function adjustQty(id, d) {
+            const item = appState.inventory.find(i => i.id === id);
+            item.qty = Math.min(item.cap, Math.max(0, item.qty + d));
+            logActivity(`Manual intake (+${d}) logged for ${item.name}`);
+            spawnToast('success', 'Database updated manually.');
+            if (appState.currentPage === 'inventory') navigate('inventory'); // Fresh render
+            openProductDetail(id); // refresh modal
+            processAlerts();
+        }
+
+        // --- CHARTS INITIALIZATION ---
+        function initCharts(page) {
+            let labels = [], data = [];
+            if (charts.trend) charts.trend.destroy();
+            if (charts.dist) charts.dist.destroy();
+            if (charts.cap) charts.cap.destroy();
+
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const tc = isDark ? '#94a3b8' : '#475569';
+            const gc = isDark ? '#1d3326' : '#e2e8f0';
+
+            if (page === 'dashboard') {
+                const p = appState.filters.dashTrendPeriod || '7d';
+                let days = 7;
+                if (p === '30d') days = 30;
+                if (p === '1y') days = 365;
+                for (let i = days - 1; i >= 0; i--) { labels.push(i + 'd'); data.push(4000 + Math.floor(Math.random() * 800 + Math.sin(i / 5) * 500)); }
+
+                const ctx = document.getElementById('dashTrendChart');
+                if (ctx) {
+                    const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
+                    gradient.addColorStop(0, 'rgba(56, 189, 248, 0.4)');
+                    gradient.addColorStop(1, 'rgba(56, 189, 248, 0)');
+
+                    charts.trend = new Chart(ctx, { 
+                        type: 'line', 
+                        data: { labels, datasets: [{ data, borderColor: '#38bdf8', backgroundColor: gradient, fill: true, tension: 0.4, pointRadius: 0, borderWidth: 3 }] }, 
+                        options: { 
+                            responsive: true, maintainAspectRatio: false, 
+                            plugins: { legend: { display: false } }, 
+                            scales: { y: { grid: { color: gc, drawBorder: false }, ticks: { color: tc, font: { family: 'JetBrains Mono' } } }, x: { grid: { display: false }, ticks: { color: tc, font: { family: 'JetBrains Mono' }, maxTicksLimit: 12 } } } 
+                        } 
+                    });
+                }
+
+                const ctxU = document.getElementById('dashUtilChart');
+                if (ctxU) {
+                    let utilData = Object.fromEntries(shelves.map(s => {
+                        const items = appState.inventory.filter(i => i.id.startsWith(s));
+                        return [s, Math.round((items.reduce((a, b) => a + b.qty, 0) / items.reduce((a, b) => a + b.cap, 0)) * 100)];
+                    }));
+                    charts.dist = new Chart(ctxU, { 
+                        type: 'bar', 
+                        data: { 
+                            labels: Object.keys(utilData).map(k => 'SEC_' + k), 
+                            datasets: [{ data: Object.values(utilData), backgroundColor: ['#4ade80', '#fbbf24', '#f87171'], borderRadius: 6 }] 
+                        }, 
+                        options: { 
+                            responsive: true, maintainAspectRatio: false, 
+                            plugins: { legend: { display: false } }, 
+                            scales: { y: { max: 100, grid: { color: gc, drawBorder: false }, ticks: { color: tc, font: { family: 'JetBrains Mono' } } }, x: { grid: { display: false }, ticks: { color: tc, font: { family: 'JetBrains Mono' } } } } 
+                        } 
+                    });
+                }
+
+                // NEW: Category Allocation
+                const ctxC = document.getElementById('dashCatChart');
+                if (ctxC) {
+                    const catData = categories.map(cat => ({ 
+                        label: cat, 
+                        val: appState.inventory.filter(i => i.category === cat).reduce((a,b)=>a+b.qty,0) 
+                    }));
+                    new Chart(ctxC, {
+                        type: 'doughnut',
+                        data: {
+                            labels: catData.map(c => c.label),
+                            datasets: [{
+                                data: catData.map(c => c.val),
+                                backgroundColor: ['#818cf8', '#fb7185', '#34d399', '#f472b6', '#a78bfa', '#fbbf24', '#2dd4bf', '#94a3b8'],
+                                borderWidth: 2,
+                                borderColor: 'rgba(0,0,0,0.3)',
+                                hoverOffset: 15
+                            }]
+                        },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            plugins: { legend: { position: 'right', labels: { color: tc, boxWidth: 10, font: { family: 'JetBrains Mono', size: 9 } } } },
+                            cutout: '65%'
+                        }
+                    });
+                }
+
+                // NEW: Supplier Performance
+                const ctxS = document.getElementById('dashSupChart');
+                if (ctxS) {
+                    const supData = suppliers.map(s => {
+                        const items = appState.inventory.filter(i => i.supplier === s);
+                        return {
+                            label: s,
+                            nodes: items.length,
+                            totalQty: items.reduce((a,b)=>a+b.qty,0)
+                        };
+                    });
+                    new Chart(ctxS, {
+                        type: 'bar',
+                        data: {
+                            labels: supData.map(s => s.label.length > 8 ? s.label.substring(0,8)+'..' : s.label),
+                            datasets: [
+                                { label: 'Node_Density', data: supData.map(s => s.nodes), backgroundColor: '#a78bfa', borderRadius: 4 },
+                                { label: 'Asset_Volume', data: supData.map(s => s.totalQty / 100), backgroundColor: 'rgba(56, 189, 248, 0.4)', borderRadius: 4 }
+                            ]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true, maintainAspectRatio: false,
+                            plugins: { 
+                                legend: { display: true, position: 'bottom', labels: { color: tc, font: { size: 9, family: 'JetBrains Mono' } } } 
+                            },
+                            scales: { 
+                                x: { grid: { color: gc }, ticks: { color: tc, font: { size: 9, family: 'JetBrains Mono' } } },
+                                y: { grid: { display: false }, ticks: { color: tc, font: { size: 9, family: 'JetBrains Mono' } } }
+                            }
+                        }
+                    });
+                }
+            } else if (page === 'analytics') {
+                if (appState.filters.analyticsTab === 'trend') {
+                    const p = appState.filters.analyticsPeriod || '7d';
+                    let days = 7;
+                    if (p === '30d') days = 30;
+                    if (p === '3m') days = 90;
+                    if (p === '1y') days = 365;
+
+                    let baseDataPoints = [];
+                    let seedMulti = 1;
+                    if (appState.filters.analyticsProduct && appState.filters.analyticsProduct !== 'all') {
+                        const match = appState.inventory.find(i => i.id === appState.filters.analyticsProduct);
+                        if (match) seedMulti = match.cap;
+                    } else if (appState.filters.analyticsGroup && appState.filters.analyticsGroup !== 'all') {
+                        seedMulti = 500;
+                    } else {
+                        seedMulti = 2000;
+                    }
+
+                    const today = new Date();
+                    for (let i = days - 1; i >= 0; i--) {
+                        const d = new Date(today);
+                        d.setDate(d.getDate() - i);
+                        labels.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                        let val = Math.floor((seedMulti * 0.4) + Math.random() * (seedMulti * 0.3) + Math.sin(i / 10) * (seedMulti * 0.2));
+                        data.push(Math.max(0, val));
+                    }
+
+                    const ctx = document.getElementById('an-trendChart');
+                    if (ctx) {
+                        const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
+                        gradient.addColorStop(0, 'rgba(74, 222, 128, 0.4)');
+                        gradient.addColorStop(1, 'rgba(74, 222, 128, 0)');
+
+                        charts.trend = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels,
+                                datasets: [{ label: 'Unit_Throughput', data, borderColor: '#4ade80', backgroundColor: gradient, fill: true, tension: 0.4, borderWidth: 3, pointRadius: days > 30 ? 0 : 3 }]
+                            },
+                            options: {
+                                responsive: true, maintainAspectRatio: false,
+                                plugins: { legend: { labels: { color: tc, font: { family: 'JetBrains Mono' } } } },
+                                scales: {
+                                    y: { grid: { color: gc, drawBorder: false }, ticks: { color: tc, font: { family: 'JetBrains Mono' } } },
+                                    x: { grid: { display: false }, ticks: { color: tc, maxTicksLimit: 12, font: { family: 'JetBrains Mono' } } }
+                                }
+                            }
+                        });
+                    }
+                } else {
+                    const ctxC = document.getElementById('an-capChart');
+                    if (ctxC) {
+                        let capDataMax = Object.fromEntries(shelves.map(s => [s, appState.inventory.filter(i => i.id.startsWith(s)).reduce((a, b) => a + b.cap, 0)]));
+                        let capDataCur = Object.fromEntries(shelves.map(s => [s, appState.inventory.filter(i => i.id.startsWith(s)).reduce((a, b) => a + b.qty, 0)]));
+                        charts.cap = new Chart(ctxC, {
+                            type: 'bar',
+                            data: {
+                                labels: Object.keys(capDataMax),
+                                datasets: [
+                                    { label: 'Active Inventory', data: Object.values(capDataCur), backgroundColor: '#4ade80', borderRadius: 4 },
+                                    { label: 'Empty Capacity', data: Object.keys(capDataMax).map(s => capDataMax[s] - capDataCur[s]), backgroundColor: isDark ? '#1d3326' : '#e2e8f0', borderRadius: 4 }
+                                ]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: tc } } }, scales: { x: { stacked: true, grid: { display: false }, ticks: { color: tc } }, y: { stacked: true, grid: { color: gc }, ticks: { color: tc } } } }
+                        });
+                    }
+                }
+            } else if (page === 'product') {
+                const p = appState.filters.productTrendPeriod || '30d';
+                let days = 30; if (p === '7d') days = 7; if (p === '1y') days = 365;
+                const item = appState.inventory.find(i => i.id === appState.currentProduct) || { cap: 1000 };
+                for (let i = days - 1; i >= 0; i--) { labels.push(i + 'd'); data.push(Math.max(0, Math.floor(item.cap * 0.4 + Math.random() * (item.cap * 0.3)))); }
+                const ctx = document.getElementById('prodTrendChart');
+                if (ctx) {
+                    charts.trend = new Chart(ctx, { type: 'line', data: { labels, datasets: [{ label: 'Unit Drawdown', data, borderColor: 'var(--primary)', backgroundColor: 'rgba(74, 222, 128, 0.1)', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false, elements: { point: { radius: days > 60 ? 0 : 4 } }, plugins: { legend: { labels: { color: tc } } }, scales: { y: { grid: { color: gc }, ticks: { color: tc } }, x: { grid: { display: false }, ticks: { color: tc, maxTicksLimit: 12 } } } } });
+                }
+            }
+        }
+
+        function toggleRobot() {
+            if (appState.robot.active) stopSimulation();
+            else startSimulation();
+        }
+
+        // ─── CORE SCAN CYCLE ─────────────────────────────────────────────
+        async function runScanCycle() {
+            if (appState.robot.scanIndex >= appState.inventory.length) {
+                appState.robot.active = false;
+                clearInterval(appState.robot.interval);
+                spawnToast('success', `Full scan complete — ${appState.robot.totalScans} sectors verified.`);
+                logToConsole('[SYS] ✓ Scan complete — all sectors verified.');
+                if (appState.currentPage === 'robotics') navigate('robotics');
+                return;
+            }
+
+            const item = appState.inventory[appState.robot.scanIndex];
+            const sensorData = generateSimData(item);
+
+            // ── Process good data ────────────────────────────────────────
+            appState.robot.lastData = sensorData;
+            appState.robot.totalScans++;
+            appState.robot.scanIndex++;
+
+            const dist = sensorData.dist;  // cm
+            const gas  = sensorData.gas;   // raw ADC 0-4095 (ESP32) or 0-1023 (sim)
+            const isEsp32 = appState.robot.connMode !== 'SIM';
+            const gasMax = isEsp32 ? 4095 : 1023;
+
+            // Map ultrasonic distance → stock quantity
+            // Distance close (< 20cm) = shelf full; Distance far (> 120cm) = empty.
+            const fillRatio = 1 - Math.min(1, Math.max(0, (dist - 20) / 100));
+            const newQty = Math.round(item.cap * fillRatio);
+            item.qty = newQty;
+            item.scanned = true;
+            item.lastUpdated = new Date().toLocaleString();
+
+            const pct = Math.round((item.qty / item.cap) * 100);
+            const stockColor = pct === 0 ? 'var(--danger)' : pct < appState.settings.threshold ? 'var(--warning)' : 'var(--success)';
+
+            // ── Update Warehouse Map Cell ────────────────────────────────
+            if (appState.robot.currentTarget) {
+                const old = document.getElementById('rbt-map-' + appState.robot.currentTarget);
+                if (old) {
+                    const oi = appState.inventory.find(i => i.id === appState.robot.currentTarget);
+                    let bg = 'var(--bg-panel)', op = '0.3';
+                    if (oi && oi.scanned) {
+                        const op2 = (oi.qty / oi.cap) * 100;
+                        bg = `var(--${op2 < appState.settings.threshold ? (op2 === 0 ? 'danger' : 'warning') : 'success'})`;
+                        op = '0.8';
+                    }
+                    old.style.background = bg; old.style.boxShadow = 'none';
+                    old.style.transform = 'scale(1)'; old.style.opacity = op;
+                }
+            }
+            appState.robot.currentTarget = item.id;
+            const newCell = document.getElementById('rbt-map-' + item.id);
+            if (newCell) {
+                newCell.style.background = 'var(--primary)';
+                newCell.style.boxShadow = '0 0 12px var(--primary)';
+                newCell.style.transform = 'scale(1.3)';
+                newCell.style.opacity = '1';
+            }
+
+            // ── Update Sensor Readout Cards ──────────────────────────────
+            if (appState.currentPage === 'robotics') {
+                // Distance card
+                const sdEl = document.getElementById('sns-dist');
+                if (sdEl) sdEl.innerHTML = `${dist}<span class="sensor-unit"> cm</span>`;
+                const slEl = document.getElementById('sns-loc');
+                if (slEl) slEl.textContent = `Target: Sector ${item.id} — ${item.name}`;
+                const distBar = document.getElementById('dist-bar');
+                if (distBar) {
+                    const distPct = Math.min(100, (dist / 200) * 100);
+                    distBar.style.width = distPct + '%';
+                    distBar.style.background = dist < 30 ? 'var(--success)' : dist < 100 ? 'var(--warning)' : 'var(--danger)';
+                }
+
+                // Gas card
+                const gasPct = Math.min(100, (gas / 1023) * 100);
+                const gasV = (gas * (3.3 / 1023)).toFixed(2);
+                const gasAlert = gas > 250;
+                const smEl = document.getElementById('sns-mq');
+                if (smEl) { smEl.textContent = gas; smEl.style.color = gasAlert ? 'var(--danger)' : ''; }
+                const smvEl = document.getElementById('sns-mq-v');
+                if (smvEl) smvEl.textContent = `${gasV} V — ${gasAlert ? '⚠ GAS ALERT' : 'SAFE'}`;
+                const gasBar = document.getElementById('gas-bar');
+                if (gasBar) {
+                    gasBar.style.width = gasPct + '%';
+                    gasBar.style.background = gasAlert ? 'var(--danger)' : gasPct > 15 ? 'var(--warning)' : 'var(--success)';
+                }
+
+                // Stock derived card
+                const sdrvEl = document.getElementById('stock-derived');
+                if (sdrvEl) sdrvEl.textContent = newQty;
+                const scapEl = document.getElementById('stock-cap');
+                if (scapEl) scapEl.textContent = `/ ${item.cap} units`;
+                const stockBar = document.getElementById('stock-bar');
+                if (stockBar) { stockBar.style.width = pct + '%'; stockBar.style.background = stockColor; }
+
+                // Console log
+                logToConsole(`[SCAN #${appState.robot.totalScans}] ${item.id} → Dist: ${dist}cm → Fill: ${pct}% → Gas: ${gas}`);
+                if (gasAlert) {
+                    logToConsole(`[⚠ ALERT] Gas spike at Sector ${item.id}! ADC=${gas}`, 'alert');
+                    spawnToast('critical', `Gas spike at Sector ${item.id}!`);
+                }
+
+                // Sync inventory table row if open
+                const invRow = document.querySelector(`[data-inv-id="${item.id}"]`);
+                if (invRow) {
+                    const qc = invRow.querySelector('.inv-qty-cell');
+                    const bar = invRow.querySelector('.inv-bar');
+                    if (qc) qc.innerText = newQty;
+                    if (bar) { bar.style.width = pct + '%'; bar.style.background = stockColor; }
+                }
+            }
+
+            processAlerts();
+        }
+
+
+
+        // ─── SIMULATION DATA GENERATOR ────────────────────────────────────────
+        function generateSimData(item) {
+            // Simulate realistic sensor readings
+            const pct = (item.qty / item.cap);
+            // Reverse-map: fuller shelf → closer distance
+            const baseDist = 20 + (1 - pct) * 130 + (Math.random() - 0.5) * 8;
+            const dist = parseFloat(Math.max(5, baseDist).toFixed(1));
+            // Simulate occasional gas spike (5% chance)
+            const gasSpike = Math.random() < 0.05;
+            const gas = gasSpike
+                ? 800 + Math.floor(Math.random() * 200)
+                : Math.floor(50 + Math.random() * 100);
+            const voltage = parseFloat((gas * (3.3 / 1023)).toFixed(2));
+            return { dist, gas, voltage, status: gasSpike ? 'GAS_ALERT' : 'OK' };
+        }
+
+
+        function logToConsole(msg, type = 'info') {
+            const el = document.getElementById('robot-console');
+            if (!el) return;
+            const line = document.createElement('div');
+            line.className = 'robot-console-line';
+            if (type === 'alert') line.classList.add('robot-console-alert');
+            line.innerText = msg;
+            el.appendChild(line);
+            if (el.children.length > 8) el.removeChild(el.firstChild);
+        }
+
+        // --- PROCUREMENT (JSPDF) ---
+        // --- PROCUREMENT (BRADNED JSPDF) ---
+        function generatePOData(items) {
+            const num = "PO-" + Date.now();
+            let total = 0;
+            const fmt = items.map(i => {
+                const q = i.p?.restockQty || 50; const p = i.price || 25; total += q * p;
+                return { name: i.name, sku: i.sku, q, p, t: q * p };
+            });
+            return { num, date: new Date().toLocaleDateString(), sup: items.length === 1 ? items[0].supplier : "Central A.R.I.S.E Req", items: fmt, sub: total, tax: total * 0.1, tot: total * 1.1 };
+        }
+        function buildPOText(d) {
+            let t = `[OFFICIAL REQUISITION: ${d.num}]\n\n`;
+            t += `ISSUED: ${d.date}\nVENDOR: ${d.sup}\n`;
+            t += `-------------------------------------------------\n`;
+            d.items.forEach(i => t += `${i.sku.padEnd(10)} | ${i.name.padEnd(15)} | x${i.q} | ₹${i.t.toFixed(2)}\n`);
+            t += `-------------------------------------------------\n`;
+            t += `GRAND TOTAL: ₹${d.tot.toFixed(2)}`;
+            return t;
+        }
+        function reviewPO(id) {
+            const item = appState.inventory.find(i => i.id === id);
+            const d = generatePOData([item]);
+            document.getElementById('po-preview-content').innerText = buildPOText(d);
+            document.getElementById('po-download-btn').onclick = () => { downloadPO(id); document.getElementById('po-modal').classList.remove('active'); };
+            document.getElementById('po-modal').classList.add('active');
+        }
+        function reviewCombinedPO() {
+            const list = appState.inventory.map(i => ({ ...i, p: runPrediction(i) })).filter(i => i.qty < i.p.demand * appState.settings.leadTime);
+            if (list.length === 0) return spawnToast('warning', 'No automated targets found.');
+            const d = generatePOData(list);
+            document.getElementById('po-preview-content').innerText = buildPOText(d);
+            document.getElementById('po-download-btn').onclick = () => { downloadCombinedPO(); document.getElementById('po-modal').classList.remove('active'); };
+            document.getElementById('po-modal').classList.add('active');
+        }
+
+        function renderProfessionalPDF(d, filename) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const primary = [56, 189, 248]; // Cyan-ish from image light blue
+            
+            // 1. TOP HEADER (LOGO AREA)
+            doc.setFillColor(primary[0], primary[1], primary[2]);
+            doc.rect(15, 10, 8, 8, 'F'); 
+            doc.setTextColor(30, 41, 59);
+            doc.setFontSize(22);
+            doc.setFont("helvetica", "bold");
+            doc.text("PurchaseControl", 26, 18);
+            doc.setFontSize(10);
+            doc.text("™", 92, 12);
+            
+            // 2. TOP RIGHT INFO
+            doc.setFontSize(18);
+            doc.text("Purchase Order", 140, 20);
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            doc.text(`PO No.: ${d.num}`, 140, 28);
+            doc.text(`${d.date}`, 140, 33);
+            doc.text("PO Status: Active - Validated", 140, 38);
+            
+            // Ahmedabad Address
+            doc.setFontSize(9);
+            doc.text("A.R.I.S.E SOLUTIONS GUJARAT", 15, 30);
+            doc.text("Plot No. 44, GIDC Electronic Estate", 15, 35);
+            doc.text("Sector 26, Ahmedabad - 382044", 15, 40);
+            doc.text("GUJARAT | INDIA", 15, 45);
+            
+            // 3. ADDRESS SECTIONS (SUPPLIER & DELIVERY)
+            doc.setFillColor(primary[0], primary[1], primary[2]);
+            doc.rect(15, 55, 90, 7, 'F');
+            doc.rect(107, 55, 90, 7, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFont("helvetica", "bold");
+            doc.text("SUPPLIER", 20, 60);
+            doc.text("DELIVERY ADDRESS", 112, 60);
+            
+            doc.setTextColor(0, 0, 0);
+            doc.setFont("helvetica", "normal");
+            // Rich Supplier Data
+            doc.setFont("helvetica", "bold");
+            doc.text(d.sup.toUpperCase(), 20, 70);
+            doc.setFont("helvetica", "normal");
+            doc.text("GSTIN: 24AAACR1250H1Z5", 20, 75);
+            doc.text("Industrial Zone, Phase IV", 20, 80);
+            doc.text("Ahmedabad, GJ - 380001", 20, 85);
+            doc.text("Contact: +91 79 2658 0000", 20, 90);
+            doc.text(`Email: support@${d.sup.toLowerCase().replace(' ', '')}.com`, 20, 95);
+            
+            // Delivery Data
+            doc.text("A.R.I.S.E Ahmedabad Warehouse", 112, 70);
+            doc.text("Inbound Dock #2, North Wing", 112, 75);
+            doc.text("GIDC Estate, Vatva", 112, 80);
+            doc.text("Ahmedabad, Gujarat 382445", 112, 85);
+            doc.text("Attn: Systems Admin (Stores)", 112, 95);
+            
+            // 4. SECONDARY META BAR
+            doc.setFillColor(186, 230, 253); 
+            doc.rect(15, 105, 182, 7, 'F');
+            doc.setFontSize(8);
+            doc.setTextColor(30, 58, 138);
+            doc.text("DELIVERY DATE", 20, 110);
+            doc.text("REQUESTED BY", 65, 110);
+            doc.text("APPROVED BY", 110, 110);
+            doc.text("DEPARTMENT", 155, 110);
+            
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(9);
+            doc.text(`${d.date}`, 20, 118);
+            doc.text("ADMIN_CORE_GJ", 65, 118);
+            doc.text("OWNER_VERIFIED", 110, 118);
+            doc.text("OPERATIONS_GJ", 155, 118);
+            
+            // 5. NOTES (Rich Customized)
+            doc.setFillColor(primary[0], primary[1], primary[2]);
+            doc.rect(15, 125, 182, 7, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFont("helvetica", "bold");
+            doc.text("NOTES / INSTRUCTIONS", 20, 130);
+            doc.setTextColor(0,0,0);
+            doc.setFontSize(8);
+            doc.setFont("helvetica", "normal");
+            doc.text("1. All items must be delivered within 48 hours of PO date. 2. QC report required on arrival.", 20, 138);
+            doc.text("3. Invoice must reference PO Number exactly. 4. Unit price inclusive of all taxes except GST.", 20, 142);
+            
+            // 6. ITEM TABLE (Fixed widths for zero overlap)
+            doc.setFillColor(primary[0], primary[1], primary[2]);
+            doc.rect(15, 150, 182, 8, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "bold");
+            doc.text("ITEM NAME", 20, 155);
+            doc.text("ITEM CODE", 70, 155);
+            doc.text("QTY.", 115, 155);
+            doc.text("ITEM PRICE", 135, 155);
+            doc.text("DISC.", 160, 155);
+            doc.text("TOTAL", 192, 155, {align: 'right'});
+            
+            let y = 165;
+            doc.setTextColor(0,0,0);
+            doc.setFont("helvetica", "normal");
+            d.items.forEach((i, idx) => {
+                if (idx % 2 === 0) {
+                    doc.setFillColor(248, 250, 252);
+                    doc.rect(15, y - 5.5, 182, 8, 'F');
+                }
+                doc.text(i.name.length > 25 ? i.name.substring(0,25)+'..' : i.name, 20, y);
+                doc.text(i.sku, 70, y);
+                doc.text(i.q.toFixed(2), 115, y);
+                doc.text(`₹ ${i.p.toFixed(2)}`, 135, y);
+                doc.text("₹ 0.00", 160, y);
+                doc.text(`₹ ${i.t.toFixed(2)}`, 192, y, {align: 'right'});
+                y += 8;
+            });
+            
+            // 7. ORDER TOTAL FOOTER
+            y += 5;
+            doc.setFillColor(primary[0], primary[1], primary[2]);
+            doc.rect(142, y, 30, 8, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFont("helvetica", "bold");
+            doc.text("ORDER TOTAL", 144, y + 5.5);
+            
+            doc.setTextColor(0,0,0);
+            doc.setFontSize(12);
+            doc.text(`₹ ${d.tot.toFixed(2)}`, 192, y + 5.5, {align: 'right'});
+            
+            // 8. SIGNATURE STAMPS
+            y += 25;
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "bold");
+            doc.text("ADMIN SIGNATURE", 30, y);
+            doc.text("OWNER SIGNATURE", 140, y);
+            
+            y += 15;
+            doc.setFont("courier", "italic");
+            doc.setTextColor(30, 58, 138); // Dark blue signature
+            doc.text("Digitally Signed by Admin", 20, y);
+            doc.text("S. PATEL (OWNER-ARISE)", 135, y);
+            
+            doc.setDrawColor(30, 58, 138);
+            doc.setLineWidth(1);
+            doc.line(15, y+2, 70, y+2);
+            doc.line(130, y+2, 190, y+2);
+            
+            doc.setFontSize(7);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(150, 150, 150);
+            doc.text("IP: 192.168.1.90 | TIME: " + new Date().toLocaleString(), 15, y+8);
+            doc.text("AUTHENTICATED PER ERP-90X ARRAY MODULE", 130, y+8);
+            
+            doc.save(filename);
+            spawnToast('success', `${filename} Dispatched Successfully`);
+        }
+
+        function downloadPO(id) {
+            const item = appState.inventory.find(i => i.id === id);
+            if (!item) return;
+            const d = generatePOData([item]);
+            renderProfessionalPDF(d, `${d.num}.pdf`);
+        }
+        function downloadCombinedPO() {
+            const list = appState.inventory.map(i => ({ ...i, p: runPrediction(i) })).filter(i => i.qty < i.p.demand * appState.settings.leadTime);
+            if (list.length === 0) return spawnToast('warning', 'No targets found.');
+            const d = generatePOData(list);
+            renderProfessionalPDF(d, `MASTER_REQUISITION_${Date.now()}.pdf`);
+        }
+
+        // --- GLOBAL UI INTERACTIONS ---
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            const h = document.documentElement; const t = h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            h.setAttribute('data-theme', t); document.getElementById('theme-icon').setAttribute('data-lucide', t === 'dark' ? 'sun' : 'moon');
+            lucide.createIcons();
+            if (appState.currentPage === 'dashboard' || appState.currentPage === 'analytics') initCharts(appState.currentPage);
+        });
+
+        // Search Bar logic
+        let searchTimer;
+        document.getElementById('global-search').addEventListener('input', (e) => {
+            const v = e.target.value.toLowerCase(); const dd = document.getElementById('search-dropdown');
+            if (!v) { dd.classList.remove('show'); return; }
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                const res = appState.inventory.filter(i => i.name.toLowerCase().includes(v) || i.sku.toLowerCase().includes(v)).slice(0, 5);
+                if (res.length === 0) { dd.innerHTML = '<div style="padding:1rem;color:var(--text-muted);text-align:center;">No match found in DB</div>'; }
+                else {
+                    dd.innerHTML = res.map(i => `<div class="search-result-item" onclick="openProductDetail('${i.id}')"><div><span style="font-weight:600">${i.name}</span> <span style="font-size:0.7rem; color:var(--text-muted); margin-left:5px;">Sector ${i.id}</span></div> <i data-lucide="arrow-up-right" style="width:14px;"></i></div>`).join('');
+                }
+                lucide.createIcons();
+                dd.classList.add('show');
+            }, 200);
+        });
+
+        // Hide dropdowns on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-container')) document.getElementById('search-dropdown').classList.remove('show');
+            if (!e.target.closest('#notif-trigger') && !e.target.closest('#notif-panel')) document.getElementById('notif-panel').classList.remove('show');
+        });
+
+        document.getElementById('notif-trigger').addEventListener('click', () => {
+            document.getElementById('notif-panel').classList.toggle('show');
+        });
+
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            initData();
+
+            // Extract hash on load if present
+            let hash = window.location.hash.replace('#', '');
+            if (hash === '') hash = 'dashboard';
+            navigate(hash);
+        });
+    </script>
+    <div class="scanline-overlay"></div>
+</body>
+
+</html>
