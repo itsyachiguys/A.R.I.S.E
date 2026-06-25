@@ -49,9 +49,12 @@ The firmware is designed for an ESP32 Development Module connected to an ultraso
 ## 🖥️ Project Media & Demos
 
 ### Demonstration Video
-See the A.R.I.S.E robot and dashboard telemetry in action:
+See the A.R.I.S.E robot and dashboard telemetry in action by clicking the preview image below to play the walkthrough:
 
-<video src="assets/arise-fullvideo.mp4" width="100%" controls></video>
+[![A.R.I.S.E. Walkthrough Video Demo](assets/arise1.png)](assets/arise-fullvideo.mp4)
+
+*(Click the image above to watch the demonstration video)*
+
 
 ### Dashboard Screenshots
 
