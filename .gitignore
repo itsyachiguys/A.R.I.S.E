@@ -1,0 +1,11 @@
+# IDE / Editor Files
+.vscode/
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Original heavy uncompressed .paint files
+*.paint
